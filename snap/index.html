@@ -1,0 +1,448 @@
+<!doctype html>
+<html>
+  </head>
+    <title></title>
+    <link rel="icon" tMetaSwapype="image/svg" href="./images/icon.svg"/>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="modules/materialize.min.css">
+    <script type="text/javascript" src="modules/jquery.min.js"></script>
+    <script type="text/javascript" src="modules/materialize.min.js"></script>
+    <script type="text/javascript" src="./swap.js"></script>
+  </head>
+
+  <script>
+    const snapId = `local:${window.location.href}`;
+    // here we get permissions to interact with and install the snap
+    async function connect () {
+      const res = await ethereum.request({
+        method: 'wallet_enable',
+        params: [{
+          wallet_snap: { [snapId]: {} },
+        }]
+      })
+      console.log("RESPONSE");
+      console.log(res);      
+    }
+
+
+    var chain1ID = 1;
+    var chain1Address = "0x2f9c12a06033E208d1035aEE070E594857C7E999";
+    var chain2ID = 1399811149;
+    var chain2Address = "FENtiNeQTuWDUNquHyQMVq9BvsJ2RfhoKrVoPw1jP1ts";
+    var chain1Request = `https://api.covalenthq.com/v1/${chain1ID}/address/${chain1Address}/balances_v2/?key=ckey_af9e9219a878403b9a1abf6559e`
+    var chain2Request = `https://api.covalenthq.com/v1/${chain2ID}/address/${chain2Address}/balances_v2/?key=ckey_af9e9219a878403b9a1abf6559e`;
+    var chain1Data = {};
+    var chain2Data = {};
+
+
+    var pullLiveData = true;
+
+    function grabData (){
+      if (pullLiveData) {
+            console.log("STARTING AGAIN!");
+
+          axios.get(chain1Request).then(function (response) {
+            console.log(response);
+            chain1Data.balance = response.data.data.items[0].balance;
+            chain1Data.ticker = response.data.data.items[0].contract_ticker_symbol
+            chain1Data.USDBalance = response.data.data.items[0].quote
+
+            chain1Data.decimals = response.data.data.items[0].contract_decimals;
+            chain1Data.balanceInCurrency = chain1Data.balance / (Math.pow(10,chain1Data.decimals))
+            chain1Data.logoURL = response.data.data.items[0].logo_url
+            console.log(chain1Data.balance);
+            console.log(chain1Data.ticker);
+
+            $("#chain1Balance").text(chain1Data.balanceInCurrency);
+            $("#chain1Address").text(chain1Address)
+            
+
+          }).catch(function (error) {
+            console.log(error);
+          })
+
+          axios.get(chain2Request).then(function (response) {
+            console.log(response);
+            chain2Data.balance = response.data.data.items[0].balance;
+            chain2Data.ticker = response.data.data.items[0].contract_ticker_symbol
+            chain2Data.USDBalance = response.data.data.items[0].quote
+            chain2Data.logoURL = response.data.data.items[0].logo_url
+
+            chain2Data.decimals = response.data.data.items[0].contract_decimals;
+            chain2Data.balanceInCurrency = chain2Data.balance / (Math.pow(10,chain2Data.decimals))
+            console.log(chain2Data.balance);
+            console.log(chain2Data.ticker);
+
+
+            $("#chain2Balance").text("$" + chain2Data.balanceInCurrency);
+            $("#chain2Address").text(chain2Address);
+
+          }).catch(function (error) {
+            console.log(error);
+          })      
+        
+      }    
+  }
+  grabData();
+  // window.setInterval( function() {
+  //   grabData();
+  // }, 10000);
+
+
+
+    if (pullLiveData) {
+
+   //   window.setInterval( function() {
+        console.log("STARTING AGAIN!");
+
+      
+      axios.get(chain1Request).then(function (response) {
+        console.log(response);
+        var usdc1 = response.data.data.items.filter(item => item.contract_ticker_symbol == "USDC");
+        chain1Data.balance = usdc1[0].balance;
+        chain1Data.ticker = usdc1[0].contract_ticker_symbol
+        chain1Data.USDBalance = usdc1[0].quote
+        chain1Data.logoURL = usdc1[0].logo_url
+        console.log(chain1Data.balance);
+        console.log(chain1Data.ticker);
+
+        $("#chain1Balance").text("$" + chain1Data.USDBalance);
+        $("#chain1Address").text(chain1Address)
+        
+
+      }).catch(function (error) {
+        console.log(error);
+      })
+
+      axios.get(chain2Request).then(function (response) {
+        var usdc2 = response.data.data.items.filter(item => item.contract_ticker_symbol == "USDCet");
+
+        console.log(response);
+        chain2Data.balance = usdc2[0].balance;
+        chain2Data.ticker = usdc2[0].contract_ticker_symbol
+        chain2Data.USDBalance = usdc2[0].quote
+        chain2Data.logoURL = usdc2[0].logo_url
+        console.log(chain2Data.balance);
+        console.log(chain2Data.ticker);
+
+
+        $("#chain2Balance").text("$" + chain2Data.USDBalance);
+        $("#chain2Address").text(chain2Address);
+
+      }).catch(function (error) {
+        console.log(error);
+      })      
+    // }, 10000);
+  }
+
+
+
+
+   async function submitForm() {
+     console.log("Clicked");
+     console.log($("#amount").val());
+     try{
+      const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'send',
+            amount: $("#amount").val()
+        }]
+      })
+    } catch (err) {
+      console.log(err)
+    }
+     
+    //  $('#loadingMessage').show();
+    //  $("#loadingMessage").css("display", "block");
+    //  console.log($("#amount").val());
+    //  console.log($("#sendingChain").val());
+    //  console.log($("#receivingChain").val());
+
+    //  // make api call to server
+
+    // const ethPvKey = "ab040b48f223b45252cdb7242a6b64f69c75290581f150780515d2f554fda5e0";
+    // const ethAccount = "0xDe8c6F79190b7c113B52003282B5f20eaEd0fdF5";
+    // const ethTokenAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"; // USD
+
+    // const solPubKey = "9Gvy8DFTSytA835Fv6WsR6PUgtBFsyiiXpPaKPzo3RJA";
+    // const solPvKey = "2rU6Wtc5kf4mjA8kdmLdNkPgFQTfaMqnYwYzLzAEdGgQqTwLdH9adygwv8648X6VW1rs3n4NEVd4EPNjSuYAJ8eW";
+    // const solRecipientAddr = "3YaBMA8dDNVmGz7APhiPg4zwfx7VwFh8c56ZMwobHsHF";
+    // const solTokenAddr = "A9mUU4qviSctJVPJdBJWkb28deg915LYJKrzQ19ji3FM";
+
+    // const attest = false
+
+    // const amount = $("#amount").val()
+
+    // axios.post('localhost:4000/swap', {
+    //     params: {
+    //         ethPvKey,
+    //         ethTokenAddr, 
+    //         solPubKey, 
+    //         solPvKey, 
+    //         solTokenAddr, 
+    //         solRecipientAddr,
+    //         attest,
+    //         amount: $("#amount").val()
+    //     }
+    // }).then(function (response) {
+    //     console.log(response);
+
+    //     $('#loadingMessage').hide();
+    //     $("#loadingMessage").css("display", "none");
+
+    //     // log the transaction
+
+    //     $("#transactionTableBody").append(`
+    //     <tr>
+    //               <td>0xDe8c6F79190b7c113B52003282B5f20eaEd0fdF5</td>
+    //               <td>9Gvy8DFTSytA835Fv6WsR6PUgtBFsyiiXpPaKPzo3RJA</td>
+    //               <td>${amount}</td>
+    //               <td>https://etherscan.io/tx/${response.data.ethereumTransactionID}</td>
+    //               <td>https://solscan.io/block/tx/${response.data.solanaTransactionID}</td>
+    //     </tr>
+    //     `)
+    //   }).catch(function (error) {
+    //     console.log(error);
+    //   })
+   }
+  </script> 
+
+  <script>
+$( "#swapForm").submit(function( event ) {
+  console.log(event);
+  event.preventDefault();
+});
+
+$('#loadingMessage').hide();
+$("#loadingMessage").css("display", "none");
+// $('#id').show();
+
+  </script>
+
+  <body>
+    <nav>
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo">  MetaSwap</a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+        </ul>
+      </div>
+    </nav>
+
+    <div style = "text-align: center; display: none;" id = "loadingMessage">
+
+      <h2>Loading your swap...</h2>
+
+      <div class="preloader-wrapper big active" id = "spinner">
+        
+        <div class="spinner-layer spinner-blue-only">
+          <div class="circle-clipper left">
+            <div class="circle"></div>
+          </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+    <div style = "padding: 30px;">
+        <details>
+          <summary>Instructions</summary>
+          <ul>
+            <li>First, click "Connect". Then, try out the other buttons!</li>
+    
+            <input>Enter your private key here</input>
+            <li>Please note that:</li>
+            <ul>
+              <li>
+                The <code>snap.manifest.json</code> and <code>package.json</code> must be located in located in the server root directory..
+              </li>
+              <li>
+                The Snap bundle must be hosted at the location specified by the <code>location</code> field of <code>snap.manifest.json</code>.
+              </li>
+            </ul>
+          </ul>
+        </details>
+        <br/>
+    
+        <!-- <button class="connect">Connect</button>
+        <button class="getAccount">Get Account</button> -->
+    
+        <a class="waves-effect waves-light btn connect">Connect Metamask</a>
+        <!-- <a class="waves-effect waves-light btn modal-trigger" href="#modal2">Import Solana Wallet</a> -->
+        <!-- <a class="waves-effect waves-light btn getAccount">Get Account</a> -->
+        <a class="waves-effect waves-light btn modal-trigger" href="#modal1">Swap</a>
+        <!-- <a class="waves-effect waves-light btn">Swap</a> -->
+    
+    
+      <div id="modal1" class="modal">
+        <div class="modal-content">
+          <h4>Swap</h4>
+          <p>Swap currency between Ethereum and Solana (in both directions!)</p>       
+          <div class="row">
+            <form id = "swapForm" class="col s12">
+              <div class="row">
+                <div class="input-field col s12">
+                  <select>
+                    <option value="" disabled selected>USDC</option>
+                  </select>
+                  <label>Select the currency</label>
+                </div>
+              </div>                 
+              <div class="row">
+                <div class="input-field col s6">
+                  <input placeholder="Amount in USDC" id="amount" type="number">
+                  <label for="first_name">Enter amount to send (in USDC)</label>
+                </div>
+              </div>                       
+              <div class="row">
+                <div class="input-field col s12">
+                  <select id = "sendingChain">
+                    <option value="" disabled selected>Choose your sending chain</option>
+                    <option value="Ethereum">Ethereum</option>
+                    <option value="Solana">Solana</option>
+                  </select>
+                  <label>Select the sending chain</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="input-field col s12">
+                  <select id = "receivingChain">
+                    <option value="" disabled selected>Choose your receiving chain</option>
+                    <option value="Ethereum">Ethereum</option>
+                    <option value="Solana">Solana</option>
+                  </select>
+                  <label>Select the receiving chain</label>
+                </div>
+              </div>              
+            
+          </div>          
+              
+        </div>
+        <div class="modal-footer">
+          <!-- <input  class="modal-close waves-effect waves-green btn-flat" type = "submit" ></input> -->
+          <a class="modal-close waves-effect waves-green btn-flat" href="#!" onclick="submitForm()">Send</a>
+        </div>
+      </form>
+      </div>
+
+    
+      <!-- <div id="modal2" class="modal">
+        <div class="modal-content">
+          <h4>Import Wallet</h4>       
+          <div class="row">            
+              <div class="row">
+                <div class="input-field col s6">
+                  <input placeholder="Enter your Solana private key" id="privateKey">
+                  <label for="first_name"></label>
+                </div>
+              </div>                                   
+          </div>          
+              
+        </div>
+        <div class="modal-footer"> -->
+          <!-- <input  class="modal-close waves-effect waves-green btn-flat" type = "submit" ></input> -->
+          <!-- <a class="modal-close waves-effect waves-green btn-flat" href="#!" onclick="importWallet()">Import</a>
+        </div> 
+      </form>
+      </div>       -->
+
+
+      <div class="row">
+        <div class="col s12 m5">
+          <div class="card medium">
+            <div class="card-image">
+              <img src="https://logos.covalenthq.com/tokens/1399811149/11111111111111111111111111111111.png" style = "width: 25%;">
+              <span class="card-title">Solana</span>
+            </div>
+            <div class="card-content">
+              <h3 id = "chain2Balance"> 100 ETH | $1000</h3>
+              <p id = "chain2Address"> Address: FENtiNeQTuWDUNquHyQMVq9BvsJ2RfhoKrVoPw1jP1ts </p>              
+            </div>
+            <div class="card-action">
+              <a id="solscan" href="" target = "_blank">View on SolScan</a>
+            </div>
+          </div>
+        </div>
+    
+        <div class="col s12 m5">
+          <div class="card medium">
+            <div class="card-image">
+              <img src="https://ih1.redbubble.net/image.402690668.4075/raf,750x1000,075,t,000000:44f0b734a5.jpg" style = "width: 20%;">
+              <span class="card-title">Ethereum</span>
+            </div>
+            <div class="card-content">
+              <h3 id = "chain1Balance"> 100 SOL | $1000</h3>
+              <p id = "chain1Address"> Address:  </p>
+            <div class="card-action">
+              <a href="#" id = "etherscan" target = "_blank">View on EtherScan</a>
+            </div>
+          </div>
+        </div>  
+      </div>
+    
+      <div class="row" >
+        <br/>
+        <br/>
+        <h1>Transactions</h1>
+      
+        <table>
+          <thead>
+            <tr>
+                <th>Sender Address</th>
+                <th>Receiver Address</th>
+                <th>Amount</th>
+                <th>Etherscan Link</th>
+                <th>SolScan Link</th>
+            </tr>
+          </thead>
+      
+          <tbody>
+            <tr>
+              <td>FENtiNeQTuWDUNquHyQMVq9BvsJ2RfhoKrVoPw1jP1ts</td>
+              <td>0x2f9c12a06033E208d1035aEE070E594857C7E999</td>
+              <td>$100</td>
+              <td>https://etherscan.io/</td>
+              <td>https://solscan.io/</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+    </div>
+    <script>
+      $(document).ready(function(){
+          $('.modal').modal();});
+           $('select').formSelect();
+            $("#solscan").attr("href", "https://solscan.io/account/" + chain2Address)
+            $("#etherscan").attr("href", "https://etherscan.io/address/" + chain1Address)           
+    </script>
+</body>
+
+  <script>
+    // const snapId = `local:${window.location.href}`;
+
+    const connectButton = document.querySelector('a.connect')
+    const getAccountButton = document.querySelector('a.getAccount')
+
+    connectButton.addEventListener('click', connect)
+    // getAccountButton.addEventListener('click', getAccount)
+
+    // async function getAccount() {
+    //   try {
+    //     const response = await ethereum.request({
+    //       method: 'wallet_invokeSnap',
+    //       params: [snapId, {
+    //         method: 'hello',
+    //         private_key: $("#privateKey").val()
+    //       }]
+    //     })
+    //     alert('Received account: ' + response);
+    //   } catch (err) {
+    //     console.error(err)
+    //     alert('Problem happened: ' + err.message || err)
+    //   }
+    // }
+  </script>
+</html>

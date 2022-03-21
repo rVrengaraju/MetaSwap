@@ -1,0 +1,13 @@
+diff --git a/node_modules/@metamask/snaps-cli/dist/cmds/build/bundleUtils.js b/node_modules/@metamask/snaps-cli/dist/cmds/build/bundleUtils.js
+index 0ff1e68..ecae4bd 100644
+--- a/node_modules/@metamask/snaps-cli/dist/cmds/build/bundleUtils.js
++++ b/node_modules/@metamask/snaps-cli/dist/cmds/build/bundleUtils.js
+@@ -89,6 +89,8 @@ function postProcess(bundleString, options = {}) {
+     if (processedString.indexOf('regeneratorRuntime') !== -1) {
+         processedString = `var regeneratorRuntime;\n${processedString}`;
+     }
++    // Alias `window` as `self`
++    processedString = `var self = window;\n${processedString}`;
+     return processedString;
+ }
+ exports.postProcess = postProcess;

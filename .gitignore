@@ -1,0 +1,5 @@
+snap/swap.js
+snap/env.js
+snap/node_modules
+dist/
+.eslintcache
