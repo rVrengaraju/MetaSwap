@@ -1,3 +1,3 @@
 # MetaSwap
 
-Easier cross chain bridging UX from within Metamask
+Easier cross-chain bridging and Solana transactions using Metamask
